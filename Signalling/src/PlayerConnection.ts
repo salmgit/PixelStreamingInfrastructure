@@ -13,6 +13,7 @@ import { IStreamer } from './StreamerRegistry';
 import { Logger } from './Logger';
 import * as LogUtils from './LoggingUtils';
 import { SignallingServer } from './SignallingServer';
+import { playerNames } from './PlayerNames';
 
 /**
  * A connection between the signalling server and a player connection.
@@ -169,8 +170,15 @@ export class PlayerConnection implements IPlayer, LogUtils.IMessageLogger {
             Logger.error(
                 `subscribe: Player ${this.playerId} could not subscribe to ${streamerId}. Max players (${streamer.maxSubscribers}) reached.`
             );
+
+            const occupingPlayerName = streamer.subscribers.values().next().value;
+            const occupyingPlayer = this.server.playerRegistry.get(occupingPlayerName ?? '');
+            const occupyingAddress = occupyingPlayer?.getPlayerInfo().remoteAddress ?? '';
+            const username = playerNames.get(occupyingAddress) ?? occupyingAddress;
+
             const failureMessage = MessageHelpers.createMessage(Messages.subscribeFailed, {
-                message: `Streamer ${streamerId} is full. Max players = ${streamer.maxSubscribers}.`
+                // Max players = ${streamer.maxSubscribers}
+                message: `Streamer ${streamerId} is full. ${username} is on.`
             });
             this.protocol.sendMessage(failureMessage);
             return;
