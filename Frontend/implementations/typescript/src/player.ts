@@ -4,6 +4,7 @@ export * from '@epicgames-ps/lib-pixelstreamingfrontend-ue5.6';
 export * from '@epicgames-ps/lib-pixelstreamingfrontend-ui-ue5.6';
 import { Config, PixelStreaming, Logger, LogLevel, Flags, NumericParameters } from '@epicgames-ps/lib-pixelstreamingfrontend-ue5.6';
 import { Application, PixelStreamingApplicationStyle } from '@epicgames-ps/lib-pixelstreamingfrontend-ui-ue5.6';
+import { emit } from 'process';
 const PixelStreamingApplicationStyles =
     new PixelStreamingApplicationStyle();
 PixelStreamingApplicationStyles.applyStyleSheet();
@@ -34,5 +35,32 @@ document.body.onload = function() {
 	});
 	document.body.appendChild(application.rootElement);
 
+	setupExtension(stream);
+
 	window.pixelStreaming = stream;
+}
+
+function setupExtension(stream: PixelStreaming) {
+	if (chrome && chrome.runtime ) {
+		// The ID of the extension we want to talk to.
+		const extensionId = "aomhlmbihphkkjopmekhgmjbfalpljja";
+
+		const port = chrome.runtime.connect(extensionId);
+
+		try {
+			port.onMessage.addListener(message => {
+				console.log(message);
+				stream.emitUIInteraction({
+					"command": "SwitchTile",
+					"tileA": message.left,
+					"TileB": message.middle,
+					"floor": message.right
+				});
+			});
+			port.postMessage({command: "activate_camera"});
+		} catch(e) {
+			console.log(e);
+		}
+		
+	} else console.error("Tag_tracker extension not installed!");
 }
