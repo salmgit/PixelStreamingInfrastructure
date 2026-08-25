@@ -2,9 +2,8 @@
 
 export * from '@epicgames-ps/lib-pixelstreamingfrontend-ue5.6';
 export * from '@epicgames-ps/lib-pixelstreamingfrontend-ui-ue5.6';
-import { Config, PixelStreaming, Logger, LogLevel, Flags, NumericParameters } from '@epicgames-ps/lib-pixelstreamingfrontend-ue5.6';
+import { Config, Flags, Logger, LogLevel, NumericParameters, PixelStreaming } from '@epicgames-ps/lib-pixelstreamingfrontend-ue5.6';
 import { Application, PixelStreamingApplicationStyle } from '@epicgames-ps/lib-pixelstreamingfrontend-ui-ue5.6';
-import { emit } from 'process';
 const PixelStreamingApplicationStyles =
     new PixelStreamingApplicationStyle();
 PixelStreamingApplicationStyles.applyStyleSheet();
@@ -61,6 +60,13 @@ function setupExtension(stream: PixelStreaming) {
 		} catch(e) {
 			console.log(e);
 		}
+
+		document.addEventListener("visibilitychange", () => {
+			if(document.hidden && port)
+				port.postMessage({command: "deactivate_camera"});
+			else
+				port.postMessage({command: "activate_camera"});
+		})
 		
 	} else console.error("Tag_tracker extension not installed!");
 }
